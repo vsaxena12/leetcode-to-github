@@ -2,11 +2,11 @@
       "manifest_version": 3,
       "name": "LeetCode to GitHub Uploader",
       "version": "1.0",
-      "description": "Automatically upload LeetCode submissions to GitHub.",
+      "description": "Automatically uploads LeetCode submissions to GitHub.",
       "permissions": [
-            "scripting",
+            "storage",
             "activeTab",
-            "storage"
+            "scripting"
       ],
       "host_permissions": [
             "https://leetcode.com/*",
@@ -28,6 +28,6 @@
             }
       ],
       "action": {
-            "default_title": "LeetCode Auto Uploader"
+            "default_title": "Auto Push to GitHub"
       }
 }

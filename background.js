@@ -1,13 +1,15 @@
-console.log("🛠 background.js loaded perfectly");
-chrome.runtime.onMessage.addListener((msg) => {
-      console.log("📬 Message received in background.js:", msg);
+console.log("🛠 background.js loaded");
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (msg.type !== "leetcodeSubmission") return;
+
+      console.log("📬 Message received from content.js:", msg);
 
       const { folderName, fileName, code } = msg.payload;
       const contentBase64 = btoa(unescape(encodeURIComponent(code)));
 
-      const repo = "vsaxena12/LeetCode-Prep"; // Change to your repo
-      const token = process.env.GITHUB_TOKEN || 'REPLACE_WITH_YOUR_TOKEN'; // Replace with your real token
+      const repo = "vsaxena12/LeetCode-Prep"; // Replace with your GitHub repo
+      const token = ""; 
       const path = `${folderName}/${fileName}`;
 
       fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
@@ -20,10 +22,15 @@ chrome.runtime.onMessage.addListener((msg) => {
             .then(res => res.status === 404 ? null : res.json())
             .then(fileInfo => {
                   const body = {
-                        message: `Upload ${fileName}`,
+                        message: `Update ${fileName}`,
                         content: contentBase64
                   };
-                  if (fileInfo && fileInfo.sha) body.sha = fileInfo.sha;
+                  if (fileInfo && fileInfo.sha) {
+                        console.log("📝 File exists — updating with SHA:", fileInfo.sha);
+                        body.sha = fileInfo.sha;
+                  } else {
+                        console.log("📄 File does not exist — creating.");
+                  }
 
                   return fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
                         method: "PUT",
@@ -35,6 +42,14 @@ chrome.runtime.onMessage.addListener((msg) => {
                   });
             })
             .then(res => res.json())
-            .then(data => console.log("✅ Uploaded:", data))
-            .catch(err => console.error("❌ Upload failed:", err));
+            .then(data => {
+                  console.log("✅ Upload successful:", data);
+                  sendResponse({ status: "success", url: data.content?.html_url });
+            })
+            .catch(err => {
+                  console.error("❌ Upload failed:", err);
+                  sendResponse({ status: "error", message: err.message });
+            });
+
+      return true; // Required for async sendResponse
 });
